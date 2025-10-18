@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: ankane/pgvector:v0.5.1
+    environment:
+      POSTGRES_DB: jarvis
+      POSTGRES_USER: jarvis
+      POSTGRES_PASSWORD: jarvis
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: ../backend
+    env_file:
+      - ../infra/env.example
+    environment:
+      DATABASE_URL: postgresql://jarvis:jarvis@postgres:5432/jarvis
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: ../backend
+    command: poetry run celery -A app.workers.celery_app.celery_app worker -l info
+    env_file:
+      - ../infra/env.example
+    environment:
+      DATABASE_URL: postgresql://jarvis:jarvis@postgres:5432/jarvis
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - postgres
+      - redis
+
+  beat:
+    build:
+      context: ../backend
+    command: poetry run celery -A app.workers.celery_app.celery_app beat -l info
+    env_file:
+      - ../infra/env.example
+    environment:
+      DATABASE_URL: postgresql://jarvis:jarvis@postgres:5432/jarvis
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+volumes:
+  pgdata:
+  qdrant-data:

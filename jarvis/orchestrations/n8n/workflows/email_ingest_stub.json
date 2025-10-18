@@ -1,0 +1,93 @@
+{
+  "name": "Email Ingest Stub",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "jarvis-email",
+        "options": {}
+      },
+      "name": "Email Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "http://api:8000/ingest",
+        "method": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "{\n  \"text\": \"={{$json.body}}\",\n  \"user_id\": 1,\n  \"source\": \"email\"\n}"
+      },
+      "name": "Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "pageId": "",
+        "title": "={{$json.goal?.title || 'Email capture'}}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "propertyKey": "Name",
+              "propertyType": "title",
+              "value": "={{$json.tasks[0].title}}"
+            }
+          ]
+        }
+      },
+      "name": "Notion Page",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 1,
+      "credentials": {
+        "notionApi": "Jarvis Notion"
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "123456",
+        "text": "Email processed"
+      },
+      "name": "Telegram Notify",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": "Jarvis Telegram Bot"
+      }
+    }
+  ],
+  "connections": {
+    "Email Webhook": {
+      "main": [
+        [
+          {
+            "node": "Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest": {
+      "main": [
+        [
+          {
+            "node": "Notion Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Page": {
+      "main": [
+        [
+          {
+            "node": "Telegram Notify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
