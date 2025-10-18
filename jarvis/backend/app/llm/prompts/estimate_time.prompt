@@ -1,0 +1,3 @@
+Estimate realistic completion times in minutes for each provided task.
+Consider context, dependencies, and typical knowledge worker velocity.
+Return JSON: {"estimate_minutes": int}

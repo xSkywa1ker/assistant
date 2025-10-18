@@ -1,0 +1,131 @@
+{
+  "name": "Telegram Ingest to Jarvis",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": []
+      },
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": "Jarvis Telegram Bot"
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "items[0].json.text = items[0].json.message?.text?.trim() || '';\nreturn items;"
+      },
+      "name": "Cleanup",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "http://api:8000/ingest",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{\n  \"text\": \"={{$json.text}}\",\n  \"user_id\": 1,\n  \"source\": \"telegram\"\n}"
+      },
+      "name": "Ingest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [],
+          "number": [],
+          "string": [
+            {
+              "value1": "={{$json[\"tasks\"][0].due}}"
+            }
+          ]
+        }
+      },
+      "name": "Has Due Date?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "start": "={{$json[\"tasks\"][0].due}}",
+        "end": "={{$json[\"tasks\"][0].due}}",
+        "summary": "={{$json[\"tasks\"][0].title}}"
+      },
+      "name": "Google Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 3,
+      "credentials": {
+        "googleCalendarOAuth2Api": "Jarvis Google Service"
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.message.chat.id}}",
+        "text": "Task captured!"
+      },
+      "name": "Telegram Confirm",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "credentials": {
+        "telegramApi": "Jarvis Telegram Bot"
+      }
+    }
+  ],
+  "connections": {
+    "Cleanup": {
+      "main": [
+        [
+          {
+            "node": "Ingest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest": {
+      "main": [
+        [
+          {
+            "node": "Has Due Date?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Due Date?": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram Confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar": {
+      "main": [
+        [
+          {
+            "node": "Telegram Confirm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
