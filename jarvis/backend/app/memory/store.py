@@ -2,16 +2,15 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Iterable
 
 import numpy as np
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.logging import get_logger
-from ..core.settings import settings
 from ..db.models import MemoryChunk, MemoryKind
-from ..llm.client import get_llm_client
+from ..llm.client import a_embed
 
 logger = get_logger(__name__)
 
@@ -45,8 +44,8 @@ class MemoryStore:
         return results[:top_k]
 
     async def _embed(self, text: str) -> list[float]:
-        client = get_llm_client()
-        vector = await client.embeddings(text)
+        vectors = await a_embed([text])
+        vector = vectors[0] if vectors else []
         if not vector:
             return simple_sentence_embedding(text)
         return vector

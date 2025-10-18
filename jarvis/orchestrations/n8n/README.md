@@ -14,3 +14,28 @@
 - `telegram_ingest.json` – Telegram message → cleanup → `/ingest` → optional Calendar event → Telegram confirmation.
 - `daily_digest_cron.json` – Daily cron at 09:00 → `/plan/next` → Telegram summary.
 - `email_ingest_stub.json` – Incoming email webhook → `/ingest` → Notion page → Telegram notification.
+
+### Calling Groq from n8n
+
+Вариант A: OpenAI Node с кастомным Base URL
+- API Key: ваш GROQ_API_KEY
+- Base URL: https://api.groq.com/openai/v1
+- Модель: llama-3.3-70b-versatile (или своя)
+
+Вариант B: HTTP Request node
+- POST https://api.groq.com/openai/v1/chat/completions
+- Headers:
+    Authorization: Bearer {{$credentials.Groq.apiKey}}
+    Content-Type: application/json
+- Body (raw JSON):
+  ```json
+  {
+    "model": "llama-3.3-70b-versatile",
+    "messages": [
+      {"role":"system","content":"You are a helpful assistant."},
+      {"role":"user","content":"Normalize this task to strict JSON schema ..."}
+    ],
+    "temperature": 0.2
+  }
+  ```
+Ответ совместим со схемой OpenAI (choices[0].message.content).
