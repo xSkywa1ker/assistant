@@ -22,10 +22,14 @@ class Settings(BaseSettings):
     timezone_default: str = Field(default="UTC", alias="TIMEZONE_DEFAULT")
 
     llm_provider: Literal["ollama", "openai"] = Field(default="ollama", alias="LLM_PROVIDER")
+
+    openai_base_url: str = Field(default="https://api.groq.com/openai/v1", alias="OPENAI_BASE_URL")
+    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="llama-3.3-70b-versatile", alias="OPENAI_MODEL")
+    openai_embedding_model: str = Field(default="text-embedding-3-small", alias="OPENAI_EMBEDDING_MODEL")
+
     ollama_base_url: AnyHttpUrl = Field(default="http://ollama:11434", alias="OLLAMA_BASE_URL")
     ollama_model: str = Field(default="llama3.1", alias="OLLAMA_MODEL")
-    openai_base_url: Optional[AnyHttpUrl] = Field(default=None, alias="OPENAI_BASE_URL")
-    openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
 
     vector_backend: Literal["pgvector", "qdrant"] = Field(default="pgvector", alias="VECTOR_BACKEND")
     qdrant_url: Optional[HttpUrl] = Field(default=None, alias="QDRANT_URL")

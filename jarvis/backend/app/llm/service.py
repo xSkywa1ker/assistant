@@ -4,7 +4,7 @@ from pathlib import Path
 
 from ..core.logging import get_logger
 from ..schemas.ingest import IngestResponse
-from .client import get_llm_client
+from .client import a_chat
 from .parsers.json_parser import parse_json_response
 
 logger = get_logger(__name__)
@@ -18,7 +18,10 @@ def load_prompt(name: str) -> str:
 
 
 async def normalize_text(text: str) -> IngestResponse:
-    prompt = load_prompt("normalize_task.prompt") + f"\nInput:\n{text}\n"
-    client = get_llm_client()
-    raw = await client.complete(prompt)
+    system_prompt = load_prompt("normalize_task.prompt")
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"Input:\n{text}\n"},
+    ]
+    raw = await a_chat(messages, temperature=0.2)
     return await parse_json_response(raw, IngestResponse)

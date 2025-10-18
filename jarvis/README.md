@@ -62,6 +62,29 @@ jarvis/
    docker compose -f infra/docker-compose.yaml restart api worker beat
    ```
 
+## Using Groq (OpenAI-compatible)
+
+1) В `.env`:
+   ```env
+   LLM_PROVIDER=openai
+   OPENAI_BASE_URL=https://api.groq.com/openai/v1
+   OPENAI_API_KEY=sk-...
+   OPENAI_MODEL=llama-3.3-70b-versatile
+   OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+   ```
+
+2) Подними контейнеры:
+   ```bash
+   make up
+   ```
+
+3) Проверь:
+   ```bash
+   curl -X POST http://localhost:8000/ingest \
+     -H 'Content-Type: application/json' \
+     -d '{"text":"Сделать презентацию к понедельнику", "user_id":"DEMO"}'
+   ```
+
 ## Миграции и сидинг
 ```bash
 cd infra
